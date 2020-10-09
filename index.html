@@ -1,0 +1,349 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>naim's homework</title>
+
+    <link href="Content/bootstrap.css" rel="stylesheet" />
+</head>
+<body style="padding: 40px;">
+    <style>
+        
+        .row-flex-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            position: absolute;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            height: 1px;
+        }
+
+        .row-flew {
+            margin: 10px;
+            min-width: 230px;
+        }
+
+        .history-buttons {
+            padding-left: 19px;
+            float: right;
+        }
+
+            .history-buttons i {
+                cursor: pointer;
+                font-size: 15px;
+            }
+
+        .list-group-item {
+            border-style: dotted;
+            border-color: black;
+        }
+
+        .list-group {
+            display: none
+        }
+
+        .activehistory {
+            display: block
+        }
+
+        .historyicon {
+            display: none
+        }
+
+        .showing {
+            display: block
+        }
+
+        .show-history-button {
+            float: right;
+        }
+
+        .char-alert {
+            color: red;
+            display: none
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            background-color: #2196F3;
+            padding: 10px;
+            margin-top: 70px;
+        }
+
+        .grid-item {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            font-size: 30px;
+            text-align: center;
+        }
+
+        .wishlist {
+            cursor: pointer;
+            position: initial;
+        }
+
+        .search-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 48px;
+            background: #60be8e;
+            color: white;
+        }
+    </style>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">My Wishlist</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="grid-container wishlistcontent">
+                        <span>No Content</span>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <span  class="btn btn-primary " id="getWishList">Show Wishlist</span>
+      
+  
+    <div class="row-flex-container">
+
+
+
+        <div class="row-flew" style="position: relative;">
+
+            <input type="text" class="form-control" id="search-input" placeholder="search" /><button class="search-button form-control"> <i class="glyphicon glyphicon-search"></i> </button>
+            <span class="char-alert">Minimum 3 characters</span>
+        </div>
+        <div class="row-flew">
+            <fieldset>
+                <legend>
+                    Search History <button class="show-history-button">
+
+                        <i class="glyphicon glyphicon-list-alt showing historyicon"> </i>
+                        <i class="glyphicon glyphicon-remove   historyicon">
+                        </i>
+                    </button>
+                </legend>
+            </fieldset>
+
+            <ul class="list-group">
+            </ul>
+
+
+
+
+
+        </div>
+
+
+
+    </div>
+    <div class="grid-container filmcontent">
+        <span>No Content</span>
+
+    </div>
+
+
+
+
+    <script src="Scripts/jquery-3.4.1.js"></script>
+    <script src="Scripts/bootstrap.js"></script>
+
+    <script>
+        var wishList = [];
+        var filmList = [];
+        var historyList = [];
+
+        function addWishList(objId) {
+            var wishListStorage = filmList.find(x => x.imdbID == objId);
+            wishList.push(wishListStorage);
+            //for (var itm of wishListStorage) {
+
+            //}
+            localStorage.setItem("wishlist", JSON.stringify(wishList));
+            wishList = [];
+        }
+
+        function removeWishList(objId) {
+            var wishListStorage = JSON.parse(localStorage.getItem("wishlist"))
+                .filter(x => x.imdbID !== objId);
+            localStorage.setItem("wishlist", JSON.stringify(wishListStorage));
+        }
+
+        function addHsitory(key) {
+
+            if (localStorage.getItem("historylist") != null)
+                if (JSON.parse(localStorage.getItem("historylist")).length > 0) {
+                    historyList = JSON.parse(localStorage.getItem("historylist"));
+                }
+
+
+            if (historyList.filter(x => x == key).length > 0) {
+                return false
+            }
+            if (historyList.length > 9) {
+                historyList.pop();
+            }
+
+            historyList.unshift(key);
+
+            localStorage.setItem("historylist", JSON.stringify(historyList));
+            historyList = [];
+            historyListFill();
+        }
+
+        function removeHsitory(key) {
+            var history = JSON.parse(localStorage.getItem("historylist")).filter(x => x != key);
+            localStorage.setItem("historylist", JSON.stringify(history));
+            historyListFill();
+
+        }
+
+        function historyListFill() {
+            $(".list-group").empty();
+            for (var item of JSON.parse(localStorage.getItem("historylist"))) {
+
+                $(".list-group").append(
+                    '   <li class="list-group-item"> ' + item + '<div class="history-buttons">  <i class="glyphicon glyphicon-search research" data-key="' + item + '"></i> &nbsp; <i class="glyphicon glyphicon-trash removeHistory" data-objid="' + item + '"></i> </div> </li>');
+            }
+        }
+
+        function fillMovies(data, targetElement) {
+            $(targetElement).empty();
+            for (var item of data) {
+                filmList.push(item);
+                var addedWishlist = "glyphicon-heart-empty";
+                if (localStorage.getItem("wishlist") != null) {
+
+                    var wishlistlacalstorage = JSON.parse(localStorage.getItem("wishlist"))
+                        .filter(x => x.imdbID === item.imdbID);
+                    addedWishlist =
+                        wishlistlacalstorage.length > 0 ? "glyphicon-heart " : "glyphicon-heart-empty";
+                }
+
+
+                $(targetElement).append('<div class="grid-item"><div>  <h4> ' +
+                    item.Title +
+                    ' <i><b>(' +
+                    (item.Year) +
+                    ')</b> </i>  <i class="glyphicon ' +
+                    addedWishlist +
+                    ' wishlist" data-id="' +
+                    item.imdbID +
+                    '"></i></h4> </div> <div> <img src="' +
+                    item.Poster +
+                    '" width="119px;" /> </div></div>');
+            }
+        }
+
+        $(document).ready(function () {
+            //localStorage.removeItem("wishlist");
+            //localStorage.removeItem("historylist");
+
+       
+
+            $("body").on("click", ".search-button", function () {
+                var searchvalue = $("#search-input").val();
+
+                if (searchvalue.length < 3) {
+                    $(".char-alert").show();
+                } else {
+                    $(".char-alert").hide();
+                    $.post("http://www.omdbapi.com/?s=" + searchvalue + "&apikey=19d777f0").then(x => {
+                        
+
+                        addHsitory(searchvalue);
+
+                        if (x.Response == "False") {
+                            $(".filmcontent").append("No Content")
+                        }
+
+                        fillMovies(x.Search, ".filmcontent");
+
+                    });
+
+                }
+
+            });
+
+            $(".list-group").on("click",
+                ".research", function () {
+
+                    var key = $(this).data("key");
+                    $("#search-input").val(key);
+                    $(".search-button").trigger("click")
+                });
+
+            $(".list-group").on("click", ".removeHistory", function () {
+                var objId = $(this).data("objid");
+                removeHsitory(objId);
+            })
+
+            $("body").on("click", ".show-history-button", function () {
+                $(".list-group").toggleClass("activehistory");
+                $(".historyicon").toggleClass("showing");
+
+
+            });
+
+            $("body").on("click", "#getWishList", function () {
+                debugger;
+                $("#exampleModal").modal("show");
+                console.log(JSON.parse(localStorage.getItem("wishlist")));
+                fillMovies(JSON.parse(localStorage.getItem("wishlist")), ".wishlistcontent");
+                return false
+            });
+
+            $("body").on("click",
+                ".wishlist",
+                function () {
+
+                    var objId = $(this).data("id");
+                    var isHasList = $(this).hasClass("glyphicon-heart");
+                    if (localStorage.getItem("wishlist") != null) {
+                        wishList = JSON.parse(localStorage.getItem("wishlist"));
+                    }
+
+
+                    if (isHasList) {
+                        debugger
+                        removeWishList(objId);
+                        $(this).removeClass("glyphicon-heart");
+                        $(this).addClass("glyphicon-heart-empty");
+
+                    } else {
+                        debugger
+                        addWishList(objId);
+                        $(this).addClass("glyphicon-heart");
+                        $(this).removeClass("glyphicon-heart-empty");
+                    }
+
+                    fillMovies(JSON.parse(localStorage.getItem("wishlist")), ".wishlistcontent");
+                });
+
+        });
+
+
+    </script>
+
+</body>
+
+
+</html>
